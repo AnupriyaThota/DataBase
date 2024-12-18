@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>All Tax Payments</h2>
+<a href="/add" class="btn btn-primary mb-3">Add Payment</a>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Company</th>
+            <th>Amount</th>
+            <th>Payment Date</th>
+            <th>Status</th>
+            <th>Due Date</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for payment in payments %}
+        <tr>
+            <td>{{ payment.id }}</td>
+            <td>{{ payment.company }}</td>
+            <td>${{ "%.2f"|format(payment.amount) }}</td>
+            <td>{{ payment.payment_date or 'N/A' }}</td>
+            <td>{{ payment.status }}</td>
+            <td>{{ payment.due_date }}</td>
+            <td>
+                <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editPaymentModal{{ payment.id }}">Edit</button>
+                <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deletePaymentModal{{ payment.id }}">Delete</button>
+            </td>
+        </tr>
+
+        <!-- Edit Payment Modal -->
+        <div class="modal fade" id="editPaymentModal{{ payment.id }}" tabindex="-1" aria-labelledby="editPaymentLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Payment</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="{{ url_for('update_payment', payment_id=payment.id) }}" method="post">
+                            <label>Company:</label>
+                            <input type="text" name="company" class="form-control" value="{{ payment.company }}" required>
+                            <label>Amount:</label>
+                            <input type="number" name="amount" class="form-control" value="{{ payment.amount }}" required>
+                            <label>Payment Date:</label>
+                            <input type="date" name="payment_date" class="form-control" value="{{ payment.payment_date }}">
+                            <label>Status:</label>
+                            <select name="status" class="form-control">
+                                <option value="paid" {% if payment.status == 'Paid' %} selected {% endif %}>Paid</option>
+                                <option value="unpaid" {% if payment.status == 'unpaid' %} selected {% endif %}>Unpaid</option>
+                            </select>
+                            <label>Due Date:</label>
+                             <select class="form-control" id="due_date" name="due_date" required>
+                                <option value="04/15/{{ current_year }}">April 15 {{ current_year }}</option>
+                                <option value="06/15/{{ current_year }}">June 15 {{ current_year }}</option>
+                                <option value="09/15/{{ current_year }}">September 15 {{ current_year }}</option>
+                                <option value="01/15/{{ current_year+1 }}">January 15 {{ current_year+1 }}</option>
+                            </select>
+                                 <button type="submit" class="btn btn-success mt-3">Save Changes</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Payment Modal -->
+        <div class="modal fade" id="deletePaymentModal{{ payment.id }}" tabindex="-1" aria-labelledby="deletePaymentLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirm Delete</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to delete payment ID {{ payment.id }}?
+                    </div>
+                    <div class="modal-footer">
+                        <form action="{{ url_for('delete_payment', payment_id=payment.id) }}" method="post">
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </tbody>
+    <tfoot>
+        <tr>
+            <td colspan="6" class="text-end"><strong>Total Amount:</strong></td>
+            <td><strong>${{ "%.2f"|format(total_amount) }}</strong></td>
+        </tr>
+    </tfoot>
+</table>
+
+<form method="GET" action="{{ url_for('all_payments') }}" class="mb-3">
+    <label for="filter_due_date" class="form-label">Filter by Due Date:</label>
+    <select name="due_date" id="filter_due_date" class="form-control" onchange="this.form.submit()">
+        <option value="">All</option>
+        <option value="04/15/{{ current_year }}" {% if selected_due_date == '04/15/' + (current_year|string) %}selected{% endif %}>April 15 {{ current_year }}</option>
+        <option value="06/15/{{ current_year }}" {% if selected_due_date == '06/15/' + (current_year|string) %}selected{% endif %}>June 15 {{ current_year }}</option>
+        <option value="09/15/{{ current_year }}" {% if selected_due_date == '09/15/' + (current_year|string) %}selected{% endif %}>September 15 {{ current_year }}</option>
+        <option value="01/15/{{ current_year+1 }}" {% if selected_due_date == '01/15/' + ((current_year + 1)|string) %}selected{% endif %}>January 15 {{ current_year + 1}}</option>
+    </select>
+
+    <button type="submit" class="btn btn-primary mt-2">Save</button>
+</form>
+
+<form>
+    <label for="taxPercent">Enter Tax Percentage:</label>
+    <input type="number" id="taxPercent" name="taxPercent" min="0" step="0.01" onchange="update()" required>
+</form>
+
+<!--<p><strong>Total Amount:</strong> ${{ total_amount }}</p>-->
+<p><strong>Tax Rate:</strong> <span id="tax_percent"></span></p>
+<p><strong>Total Tax Due:</strong> <span id="total_tax"></span></p>
+
+<script>
+function update(){
+    document.getElementById("tax_percent").innerHTML = document.getElementById("taxPercent").value * 100 + "%";
+    document.getElementById("total_tax").innerHTML = "$" + (document.getElementById("taxPercent").value * {{ total_amount }}).toFixed(2);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Tax Payment</title>
+</head>
+<body>
+    <h1>Add Tax Payment</h1>
+    <form method="POST" action="{{ url_for('add_payment') }}">
+        <label for="company">Company:</label><br>
+        <input type="text" id="company" name="company" required><br><br>
+
+        <label for="amount">Amount:</label><br>
+        <input type="number" id="amount" name="amount" step="0.01" required><br><br>
+
+        <label for="payment_date">Payment Date:</label><br>
+        <input type="date" id="payment_date" name="payment_date"><br><br>
+
+        <label for="status">Status:</label><br>
+        <select id="status" name="status" required>
+            <option value="paid">Paid</option>
+            <option value="unpaid">Unpaid</option>
+        </select><br><br>
+
+        <label for="due_date">Due Date:</label>
+        <select class="form-control" id="due_date" name="due_date" required>
+            <option value="04/15/{{ current_year }}">April 15 {{ current_year }}</option>
+            <option value="06/15/{{ current_year }}">June 15 {{ current_year }}</option>
+            <option value="09/15/{{ current_year }}">September 15 {{ current_year }}</option>
+            <option value="01/15/{{ current_year+1 }}">January 15 {{ current_year+1 }}</option>
+        </select>
+        <br><br>
+        <input type="submit" value="Add Payment">
+    </form>
+</body>
+</html>
